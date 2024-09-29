@@ -27,9 +27,12 @@ def load_css():
             color: #555555;
             transition: font-size 0.3s ease-in-out;
         }
-
+        /*input
+        {
+        
+        }*/
         /* Button styling */
-        button {
+        /*button {
             background-color: #4CAF50;
             color: white;
             padding: 12px 18px;
@@ -40,7 +43,7 @@ def load_css():
             width: 70%;  /* Make button size match the input fields */
             font-size: 14px;  /* Adjust button font size */
             transition: background-color 0.3s ease;
-        }
+        }*/
         button:hover {
             background-color: #45a049;
         }
