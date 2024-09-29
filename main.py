@@ -65,7 +65,7 @@ def load_css():
 def redirect_to_other_app():
     # Simulating redirection by changing app state
     # Replace 'other_streamlit_app' with your actual page logic or Streamlit app URL
-    st.rerun()
+    st.rerun('https://diseasepredictions.onrender.com/')
 
 
 # Main application logic
