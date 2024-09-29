@@ -1,9 +1,73 @@
 import streamlit as st
 from firebase_admin import credentials, auth
+import home
 cred = credentials.Certificate('streamlit-project-finalyear-afa5645a452c.json')
-
+import mysql.connector
+import bcrypt
 
 # Function to load custom CSS styles
+
+def get_connection():
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="secret",
+        database="disease_login"
+    )
+    return conn
+
+def create_user_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) UNIQUE,
+            email VARCHAR(255),
+            password VARCHAR(255)
+        )
+    ''')
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def add_user(username, email, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Hash the password before storing
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    try:
+        cursor.execute('INSERT INTO users (username, email, password) VALUES (%s, %s, %s)',
+                       (username, email, hashed_password))
+        conn.commit()
+    except mysql.connector.Error as err:
+        st.error(f"Error: {err}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# Function to verify user during login
+def verify_user(username, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT password FROM users WHERE username = %s', (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if result:
+        stored_password = result[0]
+        # Verify password
+        return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+    return False
+
+
+# Function to handle redirection to another Streamlit app
+def redirect_to_other_app():
+    st.page_link('https://multidisease-2.onrender.com/',label="Redirect to Application")
+
+
 def load_css():
     st.markdown(
         """
@@ -62,16 +126,13 @@ def load_css():
 
 
 # Function to handle redirection to another Streamlit app
-def redirect_to_other_app():
-    # Simulating redirection by changing app state
-    # Replace 'other_streamlit_app' with your actual page logic or Streamlit app URL
-    st.rerun('https://diseasepredictions.onrender.com/')
 
 
 # Main application logic
 def app():
     # Load custom CSS
     load_css()
+    create_user_table()
 
     # Display the title with custom CSS and hover effect
     st.markdown('<h1 class="custom-title">Multi Disease Prediction Application</h1>', unsafe_allow_html=True)
@@ -97,10 +158,13 @@ def app():
         password = st.text_input('Password', placeholder="Enter your Password", type="password", key="signup_password")
 
         if st.button('Create my Account'):
-            # Simulate account creation
-            st.success('Account Created Successfully')
-            st.markdown('Please Login using your Username and Password')
-            st.balloons()
+            try:
+                add_user(username, email, password)
+                st.success('Account Created Successfully')
+                st.markdown('Please Login using your Username and Password')
+                st.balloons()
+            except Exception as e:
+                st.error(f"Error: {e}")
 
 
 app()
